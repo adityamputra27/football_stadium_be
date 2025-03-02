@@ -8,39 +8,28 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable implements JWTSubject
+class Admin extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $table = 'admins';
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var string[]
      */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * The attributes excluded from the model's JSON form.
      *
-     * @var array<int, string>
+     * @var string[]
      */
     protected $hidden = [
         'password',
-        'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
     ];
 
     public function getJWTIdentifier()
