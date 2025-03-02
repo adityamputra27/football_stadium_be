@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LeagueController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,3 +24,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/me', [AuthController::class, 'me']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
+
+Route::get('/leagues', [LeagueController::class, 'index']);
+Route::get('/leagues/{id}', [LeagueController::class, 'show']);
+Route::post('/leagues', [LeagueController::class, 'store']);
+Route::patch('/leagues/{id}', [LeagueController::class, 'update']);
+Route::delete('/leagues/{id}', [LeagueController::class, 'destroy']);
