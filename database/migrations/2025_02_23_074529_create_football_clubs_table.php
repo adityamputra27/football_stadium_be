@@ -11,14 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('leagues', function (Blueprint $table) {
+        Schema::create('football_clubs', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('football_league_id');
             $table->string('name');
             $table->string('logo_primary')->nullable();
             $table->string('logo_white')->nullable();
-            $table->double('visit_count');
+            $table->double('visit_count')->default(0);
             $table->enum('status', ['ACTIVE', 'INACTIVE']);
             $table->timestamps();
+
+            $table->foreign('football_league_id')->references('id')->on('football_leagues');
         });
     }
 
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('leagues');
+        Schema::dropIfExists('football_clubs');
     }
 };

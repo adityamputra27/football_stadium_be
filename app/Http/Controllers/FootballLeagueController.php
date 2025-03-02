@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Helpers\UploadHelper;
 use App\Http\Responses\TheOneResponse;
-use App\Models\League;
+use App\Models\FootballLeague;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-class LeagueController extends Controller
+class FootballLeagueController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,11 +18,11 @@ class LeagueController extends Controller
      */
     public function index()
     {
-        $leagues = League::all();
+        $leagues = FootballLeague::all();
 
         return TheOneResponse::ok([
             'status' => true,
-            'message' => 'Successfully retrieved league list',
+            'message' => 'Successfully retrieved football league list',
             'data' => $leagues
         ]);
     }
@@ -56,7 +56,7 @@ class LeagueController extends Controller
         }
 
         $leagueData = $request->except(['logo_primary', 'logo_white']);
-        $league = League::create($leagueData);
+        $league = FootballLeague::create($leagueData);
 
         if ($request->hasFile('logo_primary')) {
             $logoPrimary = $request->file('logo_primary');
@@ -77,7 +77,7 @@ class LeagueController extends Controller
 
         return TheOneResponse::created([
             'status' => true,
-            'message' => 'League created successfully',
+            'message' => 'Football league created successfully',
             'data' => $league,
         ]);
     }
@@ -90,15 +90,15 @@ class LeagueController extends Controller
      */
     public function show($id)
     {
-        $league = League::find($id);
+        $league = FootballLeague::find($id);
 
         if (!$league) {
-            return TheOneResponse::notFound('League not found');
+            return TheOneResponse::notFound('Football league not found');
         }
 
         return TheOneResponse::ok([
             'status' => true,
-            'message' => 'League details retrieved successfully',
+            'message' => 'Football league details retrieved successfully',
             'data' => $league,
         ]);
     }
@@ -123,10 +123,10 @@ class LeagueController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $league = League::find($id);
+        $league = FootballLeague::find($id);
 
         if (!$league) {
-            return TheOneResponse::notFound('League not found');
+            return TheOneResponse::notFound('Football league not found');
         }
 
         $leagueData = $request->except(['logo_primary', 'logo_white']);
@@ -167,10 +167,10 @@ class LeagueController extends Controller
      */
     public function destroy($id)
     {
-        $league = League::find($id);
+        $league = FootballLeague::find($id);
 
         if (!$league) {
-            return TheOneResponse::notFound('League not found');
+            return TheOneResponse::notFound('Football league not found');
         }
 
         if ($league->logo_primary && file_exists(storage_path('app/public/'.$league->logo_primary))) {
@@ -185,7 +185,7 @@ class LeagueController extends Controller
 
         return TheOneResponse::ok([
             'status' => true,
-            'message' => 'League deleted successfully',
+            'message' => 'Football league deleted successfully',
         ]);
     }
 }

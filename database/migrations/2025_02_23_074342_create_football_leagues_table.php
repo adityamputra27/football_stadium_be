@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stadium_files', function (Blueprint $table) {
+        Schema::create('football_leagues', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('stadium_id');
-            $table->string('file');
-            $table->string('file_ext');
-            $table->string('file_size');
-            $table->string('file_path');
+            $table->string('name');
+            $table->string('logo_primary')->nullable();
+            $table->string('logo_white')->nullable();
+            $table->double('visit_count')->default(0);
+            $table->enum('status', ['ACTIVE', 'INACTIVE']);
             $table->timestamps();
-
-            $table->foreign('stadium_id')->references('id')->on('stadiums');
         });
     }
 
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stadium_files');
+        Schema::dropIfExists('football_leagues');
     }
 };

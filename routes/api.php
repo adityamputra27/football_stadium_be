@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\LeagueController;
+use App\Http\Controllers\FootballClubController;
+use App\Http\Controllers\FootballLeagueController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +26,14 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::post('/me', [AuthController::class, 'me']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
 
-Route::get('/leagues', [LeagueController::class, 'index']);
-Route::get('/leagues/{id}', [LeagueController::class, 'show']);
-Route::post('/leagues', [LeagueController::class, 'store']);
-Route::patch('/leagues/{id}', [LeagueController::class, 'update']);
-Route::delete('/leagues/{id}', [LeagueController::class, 'destroy']);
+Route::get('/leagues', [FootballLeagueController::class, 'index']);
+Route::get('/leagues/{id}', [FootballLeagueController::class, 'show']);
+Route::post('/leagues', [FootballLeagueController::class, 'store']);
+Route::patch('/leagues/{id}', [FootballLeagueController::class, 'update']);
+Route::delete('/leagues/{id}', [FootballLeagueController::class, 'destroy']);
+
+Route::get('/clubs', [FootballClubController::class, 'index']);
+Route::get('/clubs/{id}', [FootballClubController::class, 'show']);
+Route::post('/clubs', [FootballClubController::class, 'store']);
+Route::patch('/clubs/{id}', [FootballClubController::class, 'update']);
+Route::delete('/clubs/{id}', [FootballClubController::class, 'destroy']);

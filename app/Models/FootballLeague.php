@@ -4,11 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class League extends Model
+class FootballLeague extends Model
 {
     use HasFactory;
 
-    public $table = 'leagues';
+    public $table = 'football_leagues';
     protected $fillable = ['name', 'logo_primary', 'logo_white', 'visit_count', 'status'];
+
+    public function footballClub() : HasMany
+    {
+        return $this->hasMany(FootballClub::class);
+    }
 }

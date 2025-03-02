@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stadiums', function (Blueprint $table) {
+        Schema::create('football_stadiums', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('club_id');
+            $table->unsignedBigInteger('football_club_id');
             $table->string('name');
             $table->string('capacity');
             $table->string('country');
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->longText('description');
             $table->timestamps();
 
-            $table->foreign('club_id')->references('id')->on('clubs');
+            $table->foreign('football_club_id')->references('id')->on('football_clubs');
         });
     }
 
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stadiums');
+        Schema::dropIfExists('football_stadiums');
     }
 };
