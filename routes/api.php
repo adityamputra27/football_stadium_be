@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FootballClubController;
 use App\Http\Controllers\FootballLeagueController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,3 +38,5 @@ Route::get('/clubs/{id}', [FootballClubController::class, 'show']);
 Route::post('/clubs', [FootballClubController::class, 'store']);
 Route::patch('/clubs/{id}', [FootballClubController::class, 'update']);
 Route::delete('/clubs/{id}', [FootballClubController::class, 'destroy']);
+
+Route::resource('/notifications', NotificationController::class);
