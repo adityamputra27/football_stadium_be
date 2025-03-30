@@ -147,25 +147,31 @@ class APIController extends Controller
             $messaging = app('firebase.messaging');
             $notificationTitle = 'Welcome to Football Stadium App!';
             $notificationDescription = "Hi! Thanks for installing our app, we hope you enjoy and let's check it out all of about our stadium information!";
+            
+            $notification = NotificationModel::create([
+                'title' => $notificationTitle,
+                'description' => $notificationDescription,
+                'status' => 'success',
+                'category' => NotificationModel::CATEGORY_WELCOME,
+                'user_id' => $user->id,
+            ]);
 
-            $message = CloudMessage::withTarget('token', $request->fcm_token)
-                ->withNotification(Notification::create(
-                    $notificationTitle, 
-                    $notificationDescription
-                ));
+            if ($notification) {
+                $message = CloudMessage::withTarget('token', $request->fcm_token)
+                    ->withNotification(Notification::create(
+                        $notificationTitle, 
+                        $notificationDescription
+                    ))
+                    ->withData([
+                        'notification_id' => $notification->id,
+                        'category' => $notification->category,
+                        'params' => $notification->params != 'none' ? json_decode($notification->params, true) : 'none',
+                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                    ]);
 
-            $result = $messaging->send($message);
+                $result = $messaging->send($message);
 
-            if ($result) {
-                $notification = NotificationModel::create([
-                    'title' => $notificationTitle,
-                    'description' => $notificationDescription,
-                    'status' => 'success',
-                    'category' => NotificationModel::CATEGORY_WELCOME,
-                    'user_id' => $user->id,
-                ]);
-
-                if ($notification) {
+                if ($result) {
                     NotificationMark::create([
                         'notification_id' => $notification->id,
                         'user_id' => $user->id,
