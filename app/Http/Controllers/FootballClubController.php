@@ -16,12 +16,35 @@ class FootballClubController extends Controller
      */
     public function index()
     {
-        $clubs = FootballClub::all();
+        $clubs = FootballClub::with(['footballLeague'])->orderBy('name', 'ASC')->get();
 
+        $originFolder = storage_path('app/public/clubs/images/');
+        $footballClubFiles = scandir($originFolder);
+
+        $newClubs = [];
+        foreach ($clubs as $key => $value) {
+            $row = [];
+            if (!empty($value->name) && !empty($value->logo_primary)) {
+                $detectFile = explode('clubs/images/', $value->logo_white)[1];
+                if (in_array($detectFile, $footballClubFiles)) {
+                    $row['id'] = $value->id;
+                    $row['name'] = $value->name;
+                    $row['logo_primary'] = url('/') . Storage::url($value->logo_primary);
+                    $row['logo_white'] = url('/') . Storage::url($value->logo_white);
+                    $row['visit_count'] = $value->visit_count;
+                    $row['status'] = $value->status;
+                    $row['inc_key'] = $key+1;
+                    $row['football_league_id'] = $value->football_league_id;
+                    $row['football_league'] = $value->footballLeague;
+                }
+            }
+            $newClubs[] = $row;
+        }
+        
         return TheOneResponse::ok([
             'status' => true,
             'message' => 'Successfully retrieved football club list',
-            'data' => $clubs
+            'data' => $newClubs
         ]);
     }
 

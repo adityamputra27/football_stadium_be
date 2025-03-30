@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\APIController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FootballClubController;
 use App\Http\Controllers\FootballLeagueController;
@@ -46,4 +47,29 @@ Route::post('/stadiums', [FootballStadiumController::class, 'store']);
 Route::patch('/stadiums/{id}', [FootballStadiumController::class, 'update']);
 Route::delete('/stadiums/{id}', [FootballStadiumController::class, 'destroy']);
 
+Route::group(['prefix' => 'stadiums'], function () {
+    Route::get('/', [FootballStadiumController::class, 'index']);
+    Route::get('{id}', [FootballStadiumController::class, 'show']);
+    Route::post('/', [FootballStadiumController::class, 'store']);
+    Route::patch('{id}', [FootballStadiumController::class, 'update']);
+    Route::delete('{id}', [FootballStadiumController::class, 'destroy']);
+
+    Route::get('{stadiumId}/files', [FootballStadiumController::class, 'files']);
+    Route::post('{stadiumId}/files/upload', [FootballStadiumController::class, 'uploadFile']);
+    Route::delete('{stadiumId}/files/{fileId}/delete', [FootballStadiumController::class, 'deleteFile']);
+});
+
 Route::resource('/notifications', NotificationController::class);
+
+Route::group(['prefix' => 'mobile', 'middleware' => 'check-headers'], function () {
+    Route::get('/notification-counter/{userId}/user', [APIController::class, 'notificationCounter']);
+    Route::get('/notification-list/{userId}/user', [APIController::class, 'notificationUser']);
+    Route::post('/notification-list/{userId}/mark/{notificationId}', [APIController::class, 'markNotificationUser']);
+    Route::post('/register-device', [APIController::class, 'createFirstNotificationUser']);
+    Route::get('/main-screen-user', [APIController::class, 'mainScreenUser']);
+    Route::get('/all-leagues', [APIController::class, 'allLeagues']);
+    Route::get('/all-clubs/{leagueId}', [APIController::class, 'allClubsPerLeague']);
+    Route::get('/stadium/{leagueId}/league/{clubId}/club', [APIController::class, 'clubStadium']);
+
+    Route::post('/reset-user', [APIController::class, 'resetUser']);
+});

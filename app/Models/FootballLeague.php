@@ -13,7 +13,7 @@ class FootballLeague extends Model
     public $table = 'football_leagues';
     protected $fillable = ['name', 'logo_primary', 'logo_white', 'visit_count', 'status'];
 
-    public function footballClub() : HasMany
+    public function footballClubs() : HasMany
     {
         return $this->hasMany(FootballClub::class);
     }

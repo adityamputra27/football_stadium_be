@@ -18,12 +18,32 @@ class FootballLeagueController extends Controller
      */
     public function index()
     {
-        $leagues = FootballLeague::all();
+        $leagues = FootballLeague::orderBy('created_at', 'DESC')->get();
+        $originFolder = storage_path('app/public/leagues/images/');
+        $footballLeagueFiles = scandir($originFolder);
+
+        $newLeagues = [];
+        foreach ($leagues as $key => $value) {
+            $row = [];
+            if (!empty($value->name) && !empty($value->logo_primary)) {
+                $detectFile = explode('leagues/images/', $value->logo_white)[1];
+                if (in_array($detectFile, $footballLeagueFiles)) {
+                    $row['id'] = $value->id;
+                    $row['name'] = $value->name;
+                    $row['logo_primary'] = url('/') . Storage::url($value->logo_primary);
+                    $row['logo_white'] = url('/') . Storage::url($value->logo_white);
+                    $row['visit_count'] = $value->visit_count;
+                    $row['status'] = $value->status;
+                    $row['inc_key'] = $key;
+                }
+            }
+            $newLeagues[] = $row;
+        }
 
         return TheOneResponse::ok([
             'status' => true,
             'message' => 'Successfully retrieved football league list',
-            'data' => $leagues
+            'data' => $newLeagues
         ]);
     }
 
@@ -181,6 +201,7 @@ class FootballLeagueController extends Controller
             Storage::delete('public/'.$league->logo_white);
         }
 
+        $league->footballClubs()->delete();
         $league->delete();
 
         return TheOneResponse::ok([

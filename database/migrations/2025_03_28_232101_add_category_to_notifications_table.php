@@ -11,12 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('device_id')->nullable();
-            $table->datetime('last_login');
-            $table->enum('first_notif', ['success', 'failed']);
-            $table->timestamps();
+        Schema::table('notifications', function (Blueprint $table) {
+            $table->enum('category', ['WELCOME', 'GOODBYE', 'UPDATE', 'PROMOTION', 'ALERT', 'ANNOUNCEMENT', 'SOCIAL', 'TRANSACTION', 'JOB'])->after('description')->default('UPDATE');
         });
     }
 
@@ -25,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::table('notifications', function (Blueprint $table) {
+            //
+        });
     }
 };
