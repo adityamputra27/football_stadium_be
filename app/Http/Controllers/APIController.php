@@ -433,7 +433,7 @@ class APIController extends Controller
                     })
                     ->where('football_leagues.status', 'ACTIVE')
                     ->orderBy('football_leagues.name', 'ASC')
-                    ->groupBy('football_leagues.id', 'football_leagues.name')
+                    ->groupBy('football_leagues.id', 'football_leagues.name', 'football_leagues.logo_white')
                     ->get();
 
         $mappedData = $leagues->map(function ($league) {
