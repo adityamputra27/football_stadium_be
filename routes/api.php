@@ -66,6 +66,7 @@ Route::group(['prefix' => 'mobile', 'middleware' => 'check-headers'], function (
     Route::get('/notification-list/{userId}/user', [APIController::class, 'notificationUser']);
     Route::post('/notification-list/{userId}/mark/{notificationId}', [APIController::class, 'markNotificationUser']);
     Route::post('/register-device', [APIController::class, 'createFirstNotificationUser']);
+    Route::post('/first-notification-device', [APIController::class, 'sendFirstNotificationUser']);
     Route::get('/main-screen-user', [APIController::class, 'mainScreenUser']);
     Route::get('/all-leagues', [APIController::class, 'allLeagues']);
     Route::get('/all-clubs/{leagueId}', [APIController::class, 'allClubsPerLeague']);

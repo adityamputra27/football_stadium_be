@@ -66,7 +66,7 @@ class FootballLeagueController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|unique:leagues',
+            'name' => 'required|string|unique:football_leagues',
             'logo_primary' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5242880',
             'logo_white' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5242880',
         ]);

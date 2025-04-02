@@ -63,7 +63,7 @@ class FootballClubController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'football_league_id' => 'required|exists:football_leagues,id',
-            'name' => 'required|string|unique:clubs',
+            'name' => 'required|string|unique:football_clubs',
             'logo_primary' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5242880',
             'logo_white' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5242880',
         ]);

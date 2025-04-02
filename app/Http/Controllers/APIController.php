@@ -47,7 +47,7 @@ class APIController extends Controller
             return TheOneResponse::notFound('User not found');
         }
 
-        $perPage = $request->get('per_page', 15);
+        $perPage = $request->get('per_page', PHP_INT_MAX);
         $notifications = NotificationModel::select([
                 'notifications.id',
                 'notifications.title',
@@ -59,15 +59,17 @@ class APIController extends Controller
             ])
             ->with(['notificationMarks' => function ($query) use ($userId) {
                 $query->where('user_id', $userId)
+                    ->where('mark_status', 'unread')
                     ->select(['id', 'notification_id', 'user_id', 'mark_status']);
             }])
             ->whereHas('notificationMarks', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
+                $query->where('user_id', $userId)
+                    ->where('mark_status', 'unread');
             })
             ->orderBy('notifications.created_at', 'DESC')
             ->paginate($perPage);
 
-        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addMinutes(15), function () use ($userId) {
+        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addMinutes(1), function () use ($userId) {
             return NotificationMark::where('user_id', $userId)->where('mark_status', 'unread')->count();
         });
 
@@ -103,27 +105,26 @@ class APIController extends Controller
             return TheOneResponse::notFound('User not found');
         }
 
-        $notificationMark = NotificationMark::where('notification_id', $notificationId)->where('user_id', $userId)->first();
+        $notificationMarkQuery = NotificationMark::query();
+        $notificationMarkUser = $notificationMarkQuery->where('notification_id', $notificationId)->where('user_id', $userId)->first();
 
-        if (!$notificationMark) {
+        if (!$notificationMarkUser) {
             return TheOneResponse::notFound('Notification not found');
         }
 
-        if ($notificationMark->mark_status == 'read') {
-            return TheOneResponse::ok([
-                'status' => true,
-                'message' => 'Notification already marked as read',
-            ]);
-        }
-
-        DB::transaction(function () use ($notificationMark, $userId) {
-            $notificationMark->update(['mark_status' => 'read']);
+        DB::transaction(function () use ($notificationMarkUser, $userId) {
+            $notificationMarkUser->update(['mark_status' => 'read']);
             Cache::forget("user_{$userId}_unread_notification_count");
         });
+
+        $remainingUnreadNotificationCount = NotificationMark::where('user_id', $userId)->where('mark_status', 'unread')->count();
 
         return TheOneResponse::ok([
             'status' => true,
             'message' => 'Successfully updated mark notification',
+            'data' => [
+                'remaining_unread_notification_count' => $remainingUnreadNotificationCount,
+            ]
         ]);
     }
 
@@ -144,6 +145,44 @@ class APIController extends Controller
                 'first_notif' => 'success',
             ]);
 
+            return TheOneResponse::ok([
+                'status' => true,
+                'message' => 'User registered successfully',
+                'data' => $user,
+                'is_new_device' => true,
+            ]);
+        }
+
+        if ($request->fcm_token && $user->fcm_token !== $request->fcm_token) {
+            $user->update(['fcm_token' => $request->fcm_token, 'last_login' => Carbon::now()]);
+        }
+
+        $user->update(['last_login' => Carbon::now()]);
+
+        return TheOneResponse::ok([
+            'status' => true,
+            'message' => 'User already registered',
+            'data' => $user,
+            'is_new_device' => false,
+        ]);
+    }
+
+    public function sendFirstNotificationUser(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required',
+            'fcm_token' => 'required|string|min:10',
+        ]);
+
+        $notificationMark = NotificationMark::select('notification_marks.user_id', 'users.fcm_token', 'users.last_login')
+                                ->leftJoin('users', function ($join) use ($request) {
+                                    $join->on('notification_marks.user_id', '=', 'users.id')
+                                        ->where('users.fcm_token', $request->fcm_token)
+                                        ->orWhere('users.id', '=', $request->user_id);
+                                })
+                                ->where('notification_marks.user_id', $request->user_id)->first();
+
+        if (!$notificationMark) {
             $messaging = app('firebase.messaging');
             $notificationTitle = 'Welcome to Football Stadium App!';
             $notificationDescription = "Hi! Thanks for installing our app, we hope you enjoy and let's check it out all of about our stadium information!";
@@ -153,7 +192,10 @@ class APIController extends Controller
                 'description' => $notificationDescription,
                 'status' => 'success',
                 'category' => NotificationModel::CATEGORY_WELCOME,
-                'user_id' => $user->id,
+                'user_id' => $request->user_id,
+                'send_push' => true,
+                'sent_at' => Carbon::now(),
+                'sent_at_status' => 'sent',
             ]);
 
             if ($notification) {
@@ -174,7 +216,7 @@ class APIController extends Controller
                 if ($result) {
                     NotificationMark::create([
                         'notification_id' => $notification->id,
-                        'user_id' => $user->id,
+                        'user_id' => $request->user_id,
                         'mark_status' => 'unread',
                     ]);
                 }
@@ -182,22 +224,20 @@ class APIController extends Controller
 
             return TheOneResponse::ok([
                 'status' => true,
-                'message' => 'User registered successfully. Welcome notification has been sent',
-                'data' => $user,
+                'message' => 'User sended notification successfully',
                 'is_new_device' => true,
             ]);
         }
 
-        if ($request->fcm_token && $user->fcm_token !== $request->fcm_token) {
-            $user->update(['fcm_token' => $request->fcm_token, 'last_login' => Carbon::now()]);
+        if ($request->fcm_token && $notificationMark->fcm_token !== $request->fcm_token) {
+            $notificationMark->update(['fcm_token' => $request->fcm_token, 'last_login' => Carbon::now()]);
         }
 
-        $user->update(['last_login' => Carbon::now()]);
+        $notificationMark->update(['last_login' => Carbon::now()]);
 
         return TheOneResponse::ok([
             'status' => true,
-            'message' => 'User already registered',
-            'data' => $user,
+            'message' => 'User already sended notification',
             'is_new_device' => false,
         ]);
     }
@@ -246,7 +286,7 @@ class APIController extends Controller
     protected function getPopularStadiums()
     {
         $cacheKey = 'popular_stadiums_' . now()->format('Ymd');
-        return Cache::remember($cacheKey, now()->addHours(1), function () {
+        return Cache::remember($cacheKey, now()->addMinutes(1), function () {
             $stadiums = FootballClub::select(
                             'football_clubs.id as football_club_id',
                             'football_clubs.name as club_name', 
@@ -275,11 +315,11 @@ class APIController extends Controller
                 return [
                     'football_club_id' => $stadium->football_club_id,
                     'club_name' => $stadium->club_name,
-                    'logo_primary' => $stadium->logo_primary,
+                    'logo_primary' => url('/') . Storage::url($stadium->logo_primary),
                     'stadium_name' => $stadium->stadium_name,
                     'capacity' => $stadium->capacity,
                     'status' => $stadium->status,
-                    'stadium_file_path' => $filePath,
+                    'stadium_file_path' => url('/') . Storage::url($filePath),
                 ];
             })->toArray();
         });
@@ -288,12 +328,21 @@ class APIController extends Controller
     protected function getPopularLeagues()
     {
         $cacheKey = 'popular_leagues_' . now()->format('Ymd');
-        return Cache::remember($cacheKey, now()->addHours(1), function () {
-            $leagues = FootballLeague::select('id', 'name', 'logo_white')
-                    ->where('status', 'ACTIVE')
-                    ->orderBy('visit_count', 'DESC')
-                    ->take(3)
-                    ->get();
+        return Cache::remember($cacheKey, now()->addMinutes(1), function () {
+            $leagues = FootballLeague::select(
+                            'football_leagues.id', 
+                            'football_leagues.name', 
+                            'football_leagues.logo_white', 
+                            DB::raw('COUNT(football_clubs.id) as club_total'))
+                        ->leftJoin('football_clubs', function ($join) {
+                            $join->on('football_clubs.football_league_id', '=', 'football_leagues.id')
+                                ->where('football_clubs.status', 'ACTIVE');
+                        })
+                        ->where('football_leagues.status', 'ACTIVE')
+                        ->orderBy('football_leagues.visit_count', 'DESC')
+                        ->groupBy('football_leagues.id', 'football_leagues.name')
+                        ->take(3)
+                        ->get();
 
             return $leagues->map(function ($league) {
                 $filePath = $this->getValidFilePath(
@@ -306,6 +355,7 @@ class APIController extends Controller
                     'id' => $league->id,
                     'name' => $league->name,
                     'logo_white' => $filePath,
+                    'club_total' => $league->club_total,
                 ];
             })->toArray();
         });
@@ -314,9 +364,10 @@ class APIController extends Controller
     protected function getPopularClubs(array $excludedClubIds = [])
     {
         $cacheKey = 'popular_clubs_' . now()->format('Ymd') . '_' . implode('_', $excludedClubIds);
-        return Cache::remember($cacheKey, now()->addHours(1), function () use ($excludedClubIds) {
+        return Cache::remember($cacheKey, now()->addMinutes(1), function () use ($excludedClubIds) {
             $clubs = FootballClub::select(
                         'football_clubs.id as football_club_id',
+                        'football_clubs.football_league_id as football_league_id',
                         'football_clubs.name as club_name',
                         'football_clubs.logo_white',
                         'football_stadiums.name as stadium_name',
@@ -341,6 +392,7 @@ class APIController extends Controller
 
                 return [
                     'football_club_id' => $club->football_club_id,
+                    'football_league_id' => $club->football_league_id,
                     'club_name' => $club->club_name,
                     'stadium_name' => $club->stadium_name,
                     'capacity' => $club->capacity,
@@ -416,6 +468,7 @@ class APIController extends Controller
         $clubs = FootballClub::select(
                     'football_stadiums.id as football_stadium_id',
                     'football_clubs.id as football_club_id',
+                    'football_clubs.football_league_id as football_league_id',
                     'football_clubs.name as club_name',
                     'football_clubs.logo_white',
                     'football_stadiums.name as stadium_name',
@@ -438,6 +491,7 @@ class APIController extends Controller
             return [
                 'football_stadium_id' => $club->football_stadium_id,
                 'football_club_id' => $club->football_club_id,
+                'football_league_id' => $club->football_league_id,
                 'club_name' => $club->club_name,
                 'stadium_name' => $club->stadium_name,
                 'capacity' => $club->capacity,
@@ -493,7 +547,7 @@ class APIController extends Controller
                 return [
                     'id' => $file->id,
                     'football_stadium_id' => $file->football_stadium_id,
-                    'file_path' => $file->file_path,
+                    'file_path' => url('/') . Storage::url($file->file_path),
                 ];
             }),
         ];

@@ -203,12 +203,14 @@ class NotificationController extends Controller
                     $messaging->send($message);
                     $successCount++;
 
-                    NotificationMark::create([
-                        'notification_id' => $notification->id,
-                        'user_id' => $user->id,
-                        'mark_status' => 'unread',
-                    ]);
-
+                    $notificationMark = NotificationMark::where('notification_id', $notification->id)->where('user_id', $user->id)->first();
+                    if (!$notificationMark) {
+                        NotificationMark::create([
+                            'notification_id' => $notification->id,
+                            'user_id' => $user->id,
+                            'mark_status' => 'unread',
+                        ]);
+                    }
                 } catch (\Throwable $th) {
                     $failureTokens[] = [
                         'token' => $token,

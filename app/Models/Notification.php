@@ -11,7 +11,7 @@ class Notification extends Model
     use HasFactory;
 
     public $table = 'notifications';
-    protected $fillable = ['title', 'description', 'status', 'category', 'params', 'sent_at', 'sent_at_status', 'meta'];
+    protected $fillable = ['title', 'description', 'status', 'category', 'params', 'send_push', 'sent_at', 'sent_at_status', 'meta'];
 
     public const CATEGORY_WELCOME = 'WELCOME';
     public const CATEGORY_GOODBYE = 'GOODBYE';

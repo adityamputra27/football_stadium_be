@@ -248,7 +248,7 @@ class FootballStadiumController extends Controller
                 'file' => $fileName,
                 'file_ext' => $fileExt,
                 'file_size' => $image->getSize(),
-                'file_path' => url('/') . Storage::url($filePath),
+                'file_path' => $filePath,
             ];
 
             FootballStadiumFile::create($result);
