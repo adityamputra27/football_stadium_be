@@ -301,7 +301,7 @@ class APIController extends Controller
                             $join->on('football_stadium_files.football_stadium_id', '=', 'football_stadiums.id')
                                 ->whereRaw('football_stadium_files.id = (
                                     SELECT MAX(id) FROM football_stadium_files
-                                    WHERE football_stadium_id = football_stadium_files.football_stadium_id
+                                    WHERE football_stadium_files.football_stadium_id = football_stadiums.id
                                 )');
                         })
                         ->where('football_clubs.status', 'ACTIVE')
@@ -341,7 +341,7 @@ class APIController extends Controller
                         ->where('football_leagues.status', 'ACTIVE')
                         ->orderBy('football_leagues.visit_count', 'DESC')
                         ->groupBy('football_leagues.id', 'football_leagues.name')
-                        ->take(3)
+                        ->take(4)
                         ->get();
 
             return $leagues->map(function ($league) {
