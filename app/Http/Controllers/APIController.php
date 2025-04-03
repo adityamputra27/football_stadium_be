@@ -481,6 +481,10 @@ class APIController extends Controller
                 ->orderBy('football_clubs.visit_count', 'DESC')
                 ->get();
 
+        DB::transaction(function () use ($checkLeague) {
+            $checkLeague->increment('visit_count');
+        });
+
         $mappedData =  $clubs->map(function ($club) {
             $filePath = $this->getValidFilePath(
                 $club->logo_white,
@@ -519,12 +523,21 @@ class APIController extends Controller
             return TheOneResponse::notFound('Football club not found');
         }
 
+        DB::transaction(function () use ($checkLeague, $checkClub) {
+            $checkLeague->increment('visit_count');
+            $checkClub->increment('visit_count');
+        });
+
         $stadium = FootballStadium::with(['footballClub', 'footballStadiumFiles'])
                         ->whereHas('footballClub', function ($query) use ($clubId, $leagueId) {
                             $query->where('football_clubs.id', $clubId);
                             $query->where('football_clubs.football_league_id', $leagueId);
                         })
                         ->first();
+
+        if (!$stadium) {
+            return TheOneResponse::notFound('Football stadium not found');
+        }
 
         $mappedData = [
             'id' => $stadium->id,
