@@ -170,7 +170,7 @@ class APIController extends Controller
     public function sendFirstNotificationUser(Request $request)
     {
         $request->validate([
-            'user_id' => 'required',
+            'user_id' => 'required|exists:users,id',
             'fcm_token' => 'required|string|min:10',
         ]);
 
@@ -192,33 +192,32 @@ class APIController extends Controller
                 'description' => $notificationDescription,
                 'status' => 'success',
                 'category' => NotificationModel::CATEGORY_WELCOME,
-                'user_id' => $request->user_id,
                 'send_push' => true,
                 'sent_at' => Carbon::now(),
                 'sent_at_status' => 'sent',
             ]);
 
             if ($notification) {
-                $message = CloudMessage::withTarget('token', $request->fcm_token)
-                    ->withNotification(Notification::create(
-                        $notificationTitle, 
-                        $notificationDescription
-                    ))
-                    ->withData([
-                        'notification_id' => $notification->id,
-                        'category' => $notification->category,
-                        'params' => $notification->params != 'none' ? json_decode($notification->params, true) : 'none',
-                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                    ]);
-
-                $result = $messaging->send($message);
-
-                if ($result) {
-                    NotificationMark::create([
-                        'notification_id' => $notification->id,
-                        'user_id' => $request->user_id,
-                        'mark_status' => 'unread',
-                    ]);
+                $createNotificationMark = NotificationMark::create([
+                    'notification_id' => $notification->id,
+                    'user_id' => $request->user_id,
+                    'mark_status' => 'unread',
+                ]);
+                
+                if ($createNotificationMark) {
+                    $message = CloudMessage::withTarget('token', $request->fcm_token)
+                        ->withNotification(Notification::create(
+                            $notificationTitle, 
+                            $notificationDescription
+                        ))
+                        ->withData([
+                            'notification_id' => $notification->id,
+                            'category' => $notification->category,
+                            'params' => $notification->params != 'none' ? json_decode($notification->params, true) : 'none',
+                            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                        ]);
+                    
+                    $messaging->send($message);
                 }
             }
 

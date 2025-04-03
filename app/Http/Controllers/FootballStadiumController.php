@@ -36,30 +36,32 @@ class FootballStadiumController extends Controller
                 ->where('id', $value->football_club_id)
                 ->first();
             
-            $row['id'] = $value->id;
-            $row['football_club_id'] = $value->football_club_id;
+            $obj['id'] = $value->id;
+            $obj['football_club_id'] = $value->football_club_id;
 
             if (isset($value->football_club_id)) {
                 if (!empty($footballClub)) {
-                    $row['football_club'] = $footballClub;
-                    $row['football_club']['logo_primary'] = url('/') . Storage::url($footballClub->logo_primary);
-                    $row['football_club']['logo_white'] = url('/') . Storage::url($footballClub->logo_white);
+                    $obj['football_club'] = $footballClub;
+                    $obj['football_club']['logo_primary'] = url('/') . Storage::url($footballClub->logo_primary);
+                    $obj['football_club']['logo_white'] = url('/') . Storage::url($footballClub->logo_white);
                 }
             }
             
             if (!empty($value->latest_file) && in_array($value->latest_file, $filesFolder)) {
-                $row['latest_file'] = url('/') . Storage::url($filePath . $value->latest_file);
+                $obj['latest_file'] = url('/') . Storage::url($filePath . $value->latest_file);
+            } else {
+                $obj['latest_file'] = null;
             }
 
-            $row['name'] = $value->name;
-            $row['capacity'] = $value->capacity;
-            $row['country'] = $value->country;
-            $row['city'] = $value->city;
-            $row['cost'] = $value->cost;
-            $row['status'] = $value->status;
-            $row['description'] = $value->description;
+            $obj['name'] = $value->name;
+            $obj['capacity'] = $value->capacity;
+            $obj['country'] = $value->country;
+            $obj['city'] = $value->city;
+            $obj['cost'] = $value->cost;
+            $obj['status'] = $value->status;
+            $obj['description'] = $value->description;
 
-            $result[] = $row;
+            $result[] = $obj;
         }
 
         return TheOneResponse::ok([
