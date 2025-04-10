@@ -6,6 +6,8 @@ use App\Http\Responses\TheOneResponse;
 use App\Models\Notification;
 use App\Models\NotificationMark;
 use App\Models\User;
+use App\Services\NotificationService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -14,12 +16,18 @@ use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 
 class NotificationController extends Controller
 {
+    protected $service;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->service = $notificationService;
+    }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $notifications = Notification::all();
+        $notifications = Notification::orderBy('created_at', 'DESC')->get();
 
         return TheOneResponse::ok([
             'status' => true,
@@ -60,11 +68,32 @@ class NotificationController extends Controller
                 'description' => $request->description,
                 'status' => $request->status,
                 'category' => $request->category,
+                'topic_category' => $request->topic_category,
                 'params' => $request->params ? json_encode($request->params) : 'none',
+                'sent_at' => Carbon::now(),
+                'sent_at_status' => 'sent',
+                'send_push' => $request->boolean('send_push'),
             ]); 
 
             if ($request->boolean('send_push')) {
-                $this->sendPushNotification($notification, []);
+                // $this->sendPushNotification($notification, []);
+                // if ($request->topic_category) {
+                    $this->service->sendToCategory($request->topic_category, $request->title, $request->description, [
+                        'notification_id' => $notification->id,
+                        'category' => $request->category,
+                        'params' => $request->params ? json_encode($request->params) : 'none',
+                        'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                    ]);
+
+                    // $notificationMark = NotificationMark::where('notification_id', $notification->id)->where('user_id', $user->id)->first();
+                    // if (!$notificationMark) {
+                    //     NotificationMark::create([
+                    //         'notification_id' => $notification->id,
+                    //         'user_id' => $user->id,
+                    //         'mark_status' => 'unread',
+                    //     ]);
+                    // }
+                // }
             }
 
             DB::commit();

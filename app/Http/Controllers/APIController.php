@@ -27,7 +27,7 @@ class APIController extends Controller
             return TheOneResponse::notFound('User not found');
         }
 
-        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addMinutes(15), function () use ($userId) {
+        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addHours(15), function () use ($userId) {
             return NotificationMark::where('user_id', $userId)->where('mark_status', 'unread')->count();
         });
 
@@ -69,7 +69,7 @@ class APIController extends Controller
             ->orderBy('notifications.created_at', 'DESC')
             ->paginate($perPage);
 
-        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addMinutes(1), function () use ($userId) {
+        $unreadNotificationCount = Cache::remember("user_{$userId}_unread_notification_count", now()->addHours(1), function () use ($userId) {
             return NotificationMark::where('user_id', $userId)->where('mark_status', 'unread')->count();
         });
 
@@ -192,6 +192,7 @@ class APIController extends Controller
                 'description' => $notificationDescription,
                 'status' => 'success',
                 'category' => NotificationModel::CATEGORY_WELCOME,
+                'topic_category' => 'topic_welcome',
                 'send_push' => true,
                 'sent_at' => Carbon::now(),
                 'sent_at_status' => 'sent',
@@ -285,7 +286,7 @@ class APIController extends Controller
     protected function getPopularStadiums()
     {
         $cacheKey = 'popular_stadiums_' . now()->format('Ymd');
-        return Cache::remember($cacheKey, now()->addMinutes(1), function () {
+        return Cache::remember($cacheKey, now()->addHours(1), function () {
             $stadiums = FootballClub::select(
                             'football_clubs.id as football_club_id',
                             'football_clubs.name as club_name', 
@@ -327,7 +328,7 @@ class APIController extends Controller
     protected function getPopularLeagues()
     {
         $cacheKey = 'popular_leagues_' . now()->format('Ymd');
-        return Cache::remember($cacheKey, now()->addMinutes(1), function () {
+        return Cache::remember($cacheKey, now()->addHours(1), function () {
             $leagues = FootballLeague::select(
                             'football_leagues.id', 
                             'football_leagues.name', 
@@ -363,7 +364,7 @@ class APIController extends Controller
     protected function getPopularClubs(array $excludedClubIds = [])
     {
         $cacheKey = 'popular_clubs_' . now()->format('Ymd') . '_' . implode('_', $excludedClubIds);
-        return Cache::remember($cacheKey, now()->addMinutes(1), function () use ($excludedClubIds) {
+        return Cache::remember($cacheKey, now()->addHours(1), function () use ($excludedClubIds) {
             $clubs = FootballClub::select(
                         'football_clubs.id as football_club_id',
                         'football_clubs.football_league_id as football_league_id',
