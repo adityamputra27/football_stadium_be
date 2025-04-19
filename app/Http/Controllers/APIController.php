@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Responses\TheOneResponse;
 use App\Models\FootballClub;
 use App\Models\FootballLeague;
+use App\Models\FootballNews;
 use App\Models\FootballStadium;
 use App\Models\Notification as NotificationModel;
 use App\Models\NotificationMark;
@@ -455,6 +456,75 @@ class APIController extends Controller
             'status' => true,
             'message' => 'Successfully retrieved all leagues data',
             'data' => $mappedData
+        ]);
+    }
+
+    public function allFootballNews(Request $request)
+    {
+        $category = $request->get('category');
+
+        $featuredNewsMappedData = [];
+        $regularNewsMappedData = [];
+
+        $featuredNewsData = FootballNews::select('*')
+                    ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                    ->where('is_featured_news', 1)
+                    ->where('category', $category)
+                    ->orderBy('created_at', 'DESC')
+                    ->limit(4)
+                    ->get();
+
+        $regularNewsData = FootballNews::select('*')
+                    ->whereBetween('created_at', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()])
+                    ->where('is_featured_news', 0)
+                    ->where('category', $category)
+                    ->orderBy('created_at', 'DESC')
+                    ->limit(20)
+                    ->get();
+
+        $featuredNewsMappedData = $featuredNewsData->map(function ($news) {
+            $filePath = $this->getValidFilePath(
+                $news->image,
+                'news/images/',
+                storage_path('app/public/news/images'),
+            );
+
+            return [
+                'id' => $news->id,
+                'title' => $news->title,
+                'body' => $news->body,
+                'image' => $filePath,
+                'is_featured_news' => $news->is_featured_news,
+                'category' => $news->category,
+                'diff' => $news->created_at->diffForHumans()
+            ];
+        })->toArray();
+
+        $regularNewsMappedData = $regularNewsData->map(function ($news) {
+            $filePath = $this->getValidFilePath(
+                $news->image,
+                'news/images/',
+                storage_path('app/public/news/images'),
+            );
+
+            return [
+                'id' => $news->id,
+                'title' => $news->title,
+                'body' => $news->body,
+                'image' => $filePath,
+                'is_featured_news' => $news->is_featured_news,
+                'category' => $news->category,
+                'diff' => $news->created_at->diffForHumans()
+            ];
+        })->toArray();
+
+        return TheOneResponse::ok([
+            'status' => true,
+            'message' => 'Successfully retrieved all football news data',
+            'data' => [
+                'featured_news' => $featuredNewsMappedData,
+                'regular_news' => $regularNewsMappedData
+            ]
         ]);
     }
 
