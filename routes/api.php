@@ -4,6 +4,7 @@ use App\Http\Controllers\APIController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FootballClubController;
 use App\Http\Controllers\FootballLeagueController;
+use App\Http\Controllers\FootballNewsController;
 use App\Http\Controllers\FootballStadiumController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
@@ -40,6 +41,12 @@ Route::get('/clubs/{id}', [FootballClubController::class, 'show']);
 Route::post('/clubs', [FootballClubController::class, 'store']);
 Route::patch('/clubs/{id}', [FootballClubController::class, 'update']);
 Route::delete('/clubs/{id}', [FootballClubController::class, 'destroy']);
+
+Route::get('/news', [FootballNewsController::class, 'index']);
+Route::get('/news/{id}', [FootballNewsController::class, 'show']);
+Route::post('/news', [FootballNewsController::class, 'store']);
+Route::patch('/news/{id}', [FootballNewsController::class, 'update']);
+Route::delete('/news/{id}', [FootballNewsController::class, 'destroy']);
 
 Route::get('/stadiums', [FootballStadiumController::class, 'index']);
 Route::get('/stadiums/{id}', [FootballStadiumController::class, 'show']);
